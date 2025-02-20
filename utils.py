@@ -1,33 +1,33 @@
-from sqlalchemy import create_engine, sql
+from sqlalchemy import create_engine, sql, text
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-# creds
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 MYSQL_HOST = os.getenv("MYSQL_HOST")
-MYSQL_HOST = os.getenv("MYSQL_HOST")
 
 
 class dbcon:
-    def __init__(self, db_name, username, password, host) -> None:
-        self.db_name = db_name
-        self.username = username
-        self.password = password
-        self.host = host
+    def __init__(self) -> None:
+        # creds
+        self.db_name = MYSQL_DATABASE
+        self.username = MYSQL_USER
+        self.password = MYSQL_PASSWORD
+        self.host = MYSQL_HOST
+        print(MYSQL_DATABASE, MYSQL_USER)
         self.connection = None
         self.cursor = None
 
     def connect(self):
         try:
-            self.connection = create_engine(
+            self.engine = create_engine(
                 "mysql+mysqlconnector://{}:{}@{}/{}".format(
                     self.username, self.password, self.host, self.db_name
                 )
-            ).raw_connection()
-            self.cursor = self.connection.cursor()
+            )
+            # self.cursor = self.connection.cursor()
             print("Connected to MySQL database successfully!")
         except Exception as err:
             print(f"Error connecting to database: {err}")
@@ -42,12 +42,11 @@ class dbcon:
             except Exception as err:
                 print(f"Error closing connection: {err}")
 
-    def execute_query(self, query, data=None):
+    def execute_query(self, query) -> list:
+        result_set = None
         try:
-            if data:
-                self.cursor.execute(query, data)
-            else:
-                self.cursor.execute(query)
-            self.connection.commit()
+            with self.engine.connect() as connection:
+                result_set = connection.execute(text(query))
+            return result_set.fetchall()
         except Exception as err:
             print(f"Error executing query: {err}")
