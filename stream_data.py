@@ -1,3 +1,5 @@
+#Steam data into products table in MYSQL
+
 from utils import *
 import random, string
 import sys
